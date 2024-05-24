@@ -27,10 +27,10 @@
           <q-td key="Serviço" :props="props">
             {{ props.row.servico }}
           </q-td>
-          <q-td >
+          <q-td align="center">
             <q-checkbox v-model="right" label="Foi Pago" />
           </q-td>
-          <q-td q-td class="my-custom-padding"   >
+          <q-td q-td class="my-custom-padding" align="right"  >
             <q-btn color="green" label="Confirmar" @click="handleButtonClick(props.row)" class="q-mr-xs" />
             <q-btn  color="negative" label="Cancelar" @click="handleButtonClick(props.row)" />
           </q-td>
