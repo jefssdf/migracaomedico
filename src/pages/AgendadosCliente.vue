@@ -1,4 +1,5 @@
 <template>
+  <q-spinner v-if="isLoading" />
   <div class="q-pa-md">
     <q-table
       style
@@ -9,7 +10,8 @@
       :columns="columns"
       :table-colspan="9"
       row-key="index"
-    >
+      v-if="!isLoading"
+      >
       <template v-slot:body="props">
         <q-tr :props="props">
           <q-td key="name" :props="props">
@@ -27,25 +29,49 @@
           <q-td key="Serviço" :props="props">
             {{ props.row.servico }}
           </q-td>
-          <q-td align="center">
-            <q-checkbox v-model="right" label="Foi Pago" />
-          </q-td>
           <q-td q-td class="my-custom-padding" align="right"  >
-            <q-btn color="green" label="Confirmar" @click="handleButtonClick(props.row)" class="q-mr-xs" />
-            <q-btn  color="negative" label="Cancelar" @click="handleButtonClick(props.row)" />
+            <q-btn color="green" label="Confirmar" @click="confirmarAgendamento(props.row)" class="q-mr-xs" />
+            <q-btn  color="negative" label="Cancelar" @click="cancelarAgendamento(props.row)" />
           </q-td>
         </q-tr>
       </template>
     </q-table>
   </div>
+  <q-dialog v-model="mostrarDialogo" persistent>
+    <q-card>
+      <q-card-section>
+        <h2 class="text-h6">Opções de Agendamento</h2>
+        <q-checkbox v-model="opcao1" label="Foi pago" />
+        <div class="q-pa-md" style="max-width: 300px">
+        <q-input
+        v-model="text"
+        filled
+        type="textarea"
+    />
+  </div>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn label="Cancelar" color="negative" @click="fecharDialogo" />
+        <q-btn label="Enviar" color="green" @click="salvarOpcoes(props.row)" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { showLoading, hideLoading } from 'src/composables/UseApi.js'
+
 export default {
   setup () {
     const router = useRouter()
+    const isLoading = ref(true)
+    const rows = ref([])
+    const mostrarDialogo = ref(false)
+    const opcao1 = ref(false)
+    const text = ref('')
+    const linhaSelecionada = ref(null)
 
     const columns = [
 
@@ -64,53 +90,95 @@ export default {
       { name: 'Serviço', label: 'Serviço', field: 'servico' }
     ]
 
-    const rows = [
-      {
-        name: 'Igor',
-        contatos: '9999-1212',
-        Data: '06/05/2024',
-        hora: '20:32',
-        servico: 'Serviço A'
-      },
-      {
-        name: 'Joana',
-        contatos: '8888-3434',
-        Data: '07/05/2024',
-        hora: '15:45',
-        servico: 'Serviço B'
-      },
-      {
-        name: 'Pedro',
-        contatos: '7777-5656',
-        Data: '08/05/2024',
-        hora: '09:00',
-        servico: 'Serviço C'
-      },
-      {
-        name: 'Mariana',
-        contatos: '6666-7878',
-        Data: '09/05/2024',
-        hora: '14:30',
-        servico: 'Serviço D'
-      },
-      {
-        name: 'Lucas',
-        contatos: '5555-9090',
-        Data: '10/05/2024',
-        hora: '11:15',
-        servico: 'Serviço E'
+    onMounted(async () => {
+      try {
+        const response = await fetch('https://6662e04562966e20ef0a6620.mockapi.io/Nomedoproficional')
+        const data = await response.json()
+        rows.value = data
+        isLoading.value = false
+      } catch (error) {
+        console.error('Erro ao buscar dados da API:', error)
       }
-    ]
+    })
+
+    setTimeout(() => {
+      isLoading.value = false
+    }, 2000)
+
     const handleButtonClick = (row) => {
       row.pago = true
       router.push({ name: 'AgendarConsultas' })
     }
+    const confirmarAgendamento = (row) => {
+      linhaSelecionada.value = row
+      mostrarDialogo.value = true
+    }
+    const salvarOpcoes = async (row) => {
+      try {
+        // Enviar os dados para a API
+        const response = await fetch('https://6662e04562966e20ef0a6620.mockapi.io/produto', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            opcao1: opcao1.value,
+            descricao: text.value // Aqui você pode adicionar qualquer outro dado que deseja enviar
+          })
+        })
 
+        if (response.ok) {
+          mostrarDialogo.value = false
+
+          // Remover o agendamento
+          await cancelarAgendamento(row)
+        } else {
+          console.error('Erro ao enviar dados para a API:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Erro ao enviar dados para a API:', error)
+      }
+    }
+
+    const fecharDialogo = () => {
+      mostrarDialogo.value = false // Fechar o diálogo quando o botão "Cancelar" for clicado
+    }
+
+    const cancelarAgendamento = async (row) => {
+      try {
+        const response = await fetch(`https://6662e04562966e20ef0a6620.mockapi.io/Nomedoproficional/${row.id}`, {
+          method: 'DELETE'
+        })
+
+        if (response.ok) {
+          // Remover o item excluído da lista local
+          const index = rows.value.indexOf(row)
+          if (index !== -1) {
+            rows.value.splice(index, 1)
+          }
+        } else {
+          console.error('Erro ao excluir agendamento:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Erro ao excluir agendamento:', error)
+      }
+    }
     return {
       columns,
       rows,
       handleButtonClick,
-      right: ref(false)
+      confirmarAgendamento,
+      cancelarAgendamento,
+      right: ref(false),
+      isLoading,
+      showLoading,
+      hideLoading,
+      mostrarDialogo,
+      salvarOpcoes,
+      fecharDialogo,
+      opcao1,
+      text: ref('')
+
     }
   }
 }

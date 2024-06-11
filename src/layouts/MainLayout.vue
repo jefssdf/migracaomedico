@@ -63,20 +63,26 @@ const linksList = [
   {
     title: 'Agendamentos pendentes',
     caption: '',
-    icon: 'list',
+    icon: 'library_books',
     route: { name: 'Agendamentos' }
   },
   {
     title: 'Agendados',
     caption: '',
-    icon: 'list',
+    icon: 'library_books',
     route: { name: 'Agendados' }
   },
   {
     title: 'Produtos Cadastrados',
     caption: '',
-    icon: 'list',
+    icon: 'inventory_2',
     route: { name: 'ProdutosCadastrados' }
+  },
+  {
+    title: 'Horarios',
+    caption: '',
+    icon: 'schedule',
+    route: { name: 'Horarios' }
   }
 ]
 

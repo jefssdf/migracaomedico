@@ -41,18 +41,8 @@
         </template>
         <template v-slot:body-cell-actions="props">
           <q-td :props="props" align="right">
-            <q-btn
-              class="button-confirm button-spacing"
-              flat
-              label="Confirmar"
-              @click="addRow(props.row)"
-            ></q-btn>
-            <q-btn
-              class="button-cancel"
-              flat
-              label="Cancelar"
-              @click="deleteRow(props.row)"
-            ></q-btn>
+            <q-btn color="green" label="Confirmar" @click="handleButtonClick(props.row)" class="q-mr-xs" />
+            <q-btn  color="negative" label="Cancelar" @click="handleButtonClick(props.row)" />
           </q-td>
         </template>
       </q-table>

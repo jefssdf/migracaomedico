@@ -4,19 +4,65 @@
       <h2 style="font-weight: bold;">Logar</h2>
       <label>
         <span> Login </span>
-        <q-input rounded outlined v-model="login" label="Digite seu Email" />
+        <q-input
+          rounded
+          outlined
+          v-model="login"
+          label="Digite seu Email"
+          :rules="[
+                    val => /[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/.test(val) || 'Insira um endereço de email válido',
+                    val => val && val.length >= 5 || 'O email deve ter no mínimo 5 caracteres'
+                  ]"
+        />
       </label>
       <label>
         <span> Senha</span>
-        <q-input type="password" rounded outlined v-model="senha" label="Digite sua Senha" />
+        <q-input
+          type="password"
+          rounded
+          outlined
+          v-model="senha"
+          label="Digite sua Senha"
+          :rules="[val => !!val || 'Digite sua Senha']"
+        />
       </label>
       <label class="salvar-senha-label">
         <q-toggle v-model="salvarSenha" color="secondary" label="Salvar Senha" />
       </label>
-      <q-btn flat color="secondary" label="Entrar" type="button" text-color="white" @click="fazerLogin"/>
+      <q-btn flat color="secondary" label="Entrar" type="button" text-color="white" @click="fazerLogin" :disable="!formularioCompleto"/>
     </form>
   </div>
 </template>
+
+<script>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+export default {
+  setup () {
+    const login = ref('')
+    const senha = ref('')
+    const salvarSenha = ref(false)
+    const router = useRouter()
+
+    const fazerLogin = () => {
+      router.push({ name: 'ProdutosProcedimentos' })
+    }
+
+    const formularioCompleto = computed(() => {
+      return !!login.value && !!senha.value
+    })
+
+    return {
+      login,
+      senha,
+      salvarSenha,
+      formularioCompleto,
+      fazerLogin
+    }
+  }
+}
+</script>
 
 <style scoped>
 
@@ -98,28 +144,3 @@
     }
   }
 </style>
-
-<script>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-
-export default {
-  setup () {
-    const login = ref('')
-    const senha = ref('')
-    const salvarSenha = ref(false)
-    const router = useRouter()
-
-    const fazerLogin = () => {
-      router.push({ name: 'ProdutosProcedimentos' })
-    }
-
-    return {
-      login,
-      senha,
-      salvarSenha,
-      fazerLogin
-    }
-  }
-}
-</script>
