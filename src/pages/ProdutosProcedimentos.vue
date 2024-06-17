@@ -1,23 +1,24 @@
+<!-- eslint-disable import/named -->
 <template>
   <div class="primeira">
     <q-page padding>
-      <q-form @submit="onSubmit" @reset="onReset" class="q-gutter-md">
+      <q-form  @submit.prevent="onSubmit" @reset="onReset" class="q-gutter-md">
         <q-input
-          v-model="nome"
+          v-model="name"
           label="Nome"
           :rules="[
             (val) => !!val || 'O Nome do produto ou procedimento é obrigatório'
           ]"
         />
         <q-input
-          v-model="descricao"
+          v-model="description"
           label="Descrição"
           :rules="[
             (val) => !!val || 'A descrição é obrigatória'
           ]"
         />
         <q-input
-          v-model.number="preco"
+          v-model.number="price"
           label="Preço"
           type="number"
           prefix="R$"
@@ -27,7 +28,7 @@
           ]"
         />
         <q-input
-          v-model.number="tempo"
+          v-model.number="duration"
           label="Tempo de procedimento (minutos)"
           type="number"
           prefix="Min"
@@ -43,6 +44,7 @@
 </template>
 
 <script>
+// eslint-disable-next-line import/named
 import { ref } from 'vue'
 import axios from 'axios'
 import { useQuasar } from 'quasar'
@@ -51,25 +53,32 @@ import useNotify from 'src/composables/UserNotify'
 export default {
   setup () {
     const $q = useQuasar()
-    const descricao = ref('')
-    const preco = ref(0)
-    const tempo = ref(0)
-    const nome = ref('')
+    const description = ref('')
+    const price = ref(0)
+    const duration = ref(0)
+    const name = ref('')
+    const legalEntityId = ref('C22F4F54-AE63-4D46-428B-08DC8CA6D443')
     const { notifyError, notifySuccess } = useNotify()
 
-    // const router = useRouter()
+    const formatDuration = (minutes) => {
+      const hours = Math.floor(minutes / 60).toString().padStart(2, '0')
+      const mins = (minutes % 60).toString().padStart(2, '0')
+      return `${hours}:${mins}:00`
+    }
 
     const onSubmit = async () => {
-      if (!nome.value || !descricao.value || preco.value === null || tempo.value === null || tempo.value <= 0) {
+      if (!name.value || !description.value || price.value === null || duration.value === null || duration.value <= 0) {
         console.log('Por favor, preencha todos os campos antes de enviar o formulário')
         return
       }
       try {
-        const response = await axios.post('https://6662e04562966e20ef0a6620.mockapi.io/produto', {
-          name: nome.value,
-          description: descricao.value,
-          price: preco.value,
-          time: tempo.value
+        const formattedDuration = formatDuration(duration.value)
+        const response = await axios.post('http://localhost:5123/Service', {
+          name: name.value,
+          description: description.value,
+          duration: formattedDuration,
+          price: price.value,
+          legalEntityId: legalEntityId.value
         })
 
         $q.notify({
@@ -91,17 +100,17 @@ export default {
     }
 
     const onReset = () => {
-      nome.value = ''
-      descricao.value = ''
-      preco.value = 0
-      tempo.value = 0
+      name.value = ''
+      description.value = ''
+      price.value = 0
+      duration.value = 0
     }
 
     return {
-      descricao,
-      preco,
-      tempo,
-      nome,
+      description,
+      price,
+      duration,
+      name,
       onSubmit,
       onReset,
       notifyError,

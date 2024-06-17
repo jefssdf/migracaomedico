@@ -16,7 +16,6 @@
             </div>
             <div class="produto-acoes">
               <q-btn @click="editarProduto(index)" color="primary" label="Editar" class="q-mr-md" />
-              <q-btn @click="removerProduto(index)" color="negative" label="Remover" />
             </div>
           </div>
         </q-card-section>
@@ -28,8 +27,8 @@
           <h2 class="text-h6">Editar Produto</h2>
           <q-input v-model="produtoEditado.name" label="Nome" />
           <q-input v-model="produtoEditado.description" label="Descrição" />
-          <q-input v-model="produtoEditado.time" label="Tempo" type="number" prefix="Min" />
-          <q-input v-model="produtoEditado.price" label="Preço" type="number" prefix="R$" />
+          <q-input v-model.number="produtoEditado.duration" label="Duração (minutos)" type="number" prefix="Min" />
+          <q-input v-model.number="produtoEditado.price" label="Preço" type="number" prefix="R$" />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn label="Cancelar" color="negative" @click="fecharModal" />
@@ -52,17 +51,17 @@ export default defineComponent({
     const produtos = ref([])
     const mostrarModal = ref(false)
     const produtoEditado = ref({
-      id: null,
+      serviceId: '',
       name: '',
       description: '',
-      time: 0,
+      duration: 0,
       price: 0
     })
     const produtoIndexEditado = ref(null)
 
     const carregarProdutos = async () => {
       try {
-        const response = await axios.get('https://6662e04562966e20ef0a6620.mockapi.io/produto')
+        const response = await axios.get('http://localhost:5123/Service')
         produtos.value = response.data
       } catch (error) {
         notifyError('Erro ao carregar produtos')
@@ -78,15 +77,28 @@ export default defineComponent({
 
     const fecharModal = () => {
       mostrarModal.value = false
-      produtoEditado.value = { id: null, name: '', description: '', time: 0, price: 0 }
+      produtoEditado.value = { serviceId: '', name: '', description: '', duration: 0, price: 0 }
       produtoIndexEditado.value = null
+    }
+
+    const formatDuration = (minutes) => {
+      const hours = Math.floor(minutes / 60).toString().padStart(2, '0')
+      const mins = (minutes % 60).toString().padStart(2, '0')
+      return `${hours}:${mins}:00`
     }
 
     const salvarProduto = async () => {
       if (produtoIndexEditado.value !== null) {
         try {
-          const produto = produtoEditado.value
-          await axios.put(`https://6662e04562966e20ef0a6620.mockapi.io/produto/${produto.id}`, produto)
+          const produto = {
+            serviceId: produtoEditado.value.serviceId,
+            name: produtoEditado.value.name,
+            description: produtoEditado.value.description,
+            duration: formatDuration(produtoEditado.value.duration),
+            price: produtoEditado.value.price,
+            legalEntityId: produtoEditado.value.legalEntityId
+          }
+          await axios.put(`http://localhost:5123/Service/${produto.serviceId}`, produto)
           produtos.value[produtoIndexEditado.value] = { ...produto }
           notifySuccess('Produto salvo com sucesso')
         } catch (error) {
@@ -95,25 +107,6 @@ export default defineComponent({
         }
       }
       fecharModal()
-    }
-
-    const removerProduto = async (index) => {
-      const produto = produtos.value[index]
-      const produtoId = produto.id
-      try {
-        // Realize uma solicitação para obter o nome do produto com base no ID
-        const response = await axios.get(`https://6662e04562966e20ef0a6620.mockapi.io/produto/${produtoId}`)
-        const nomeProduto = response.data.name
-
-        // Remova o produto da lista
-        await axios.delete(`https://6662e04562966e20ef0a6620.mockapi.io/produto/${produtoId}`)
-        produtos.value.splice(index, 1)
-
-        notifySuccess(`Produto "${nomeProduto}" removido com sucesso`)
-      } catch (error) {
-        notifyError('Erro ao remover produto')
-        console.error('Erro ao remover produto:', error)
-      }
     }
 
     onMounted(() => {
@@ -128,8 +121,7 @@ export default defineComponent({
       carregarProdutos,
       editarProduto,
       fecharModal,
-      salvarProduto,
-      removerProduto
+      salvarProduto
     }
   }
 })

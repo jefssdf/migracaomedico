@@ -17,11 +17,11 @@
           <q-td key="name" :props="props">
             {{ props.row.name }}
           </q-td>
-          <q-td key="contatos" :props="props">
-            {{ props.row.contatos }}
+          <q-td key="phoneNumber" :props="props">
+            {{ props.row.phoneNumber }}
           </q-td>
-          <q-td key="Data" :props="props">
-            {{ props.row.Data }}
+          <q-td key="schedulingDate" :props="props">
+            {{ props.row.schedulingDate }}
           </q-td>
           <q-td key="Hora" :props="props">
             {{ props.row.hora }}
@@ -29,7 +29,11 @@
           <q-td key="Serviço" :props="props">
             {{ props.row.servico }}
           </q-td>
-          <q-td q-td class="my-custom-padding" align="right"  >
+          <q-td align="center">
+          <input type="checkbox" name="pago" v-model="Pago" value="foipago">
+          <span> Foi pago</span>
+          </q-td>
+          <q-td q-td class="my-custom-padding" align="center"  >
             <q-btn color="green" label="Confirmar" @click="confirmarAgendamento(props.row)" class="q-mr-xs" />
             <q-btn  color="negative" label="Cancelar" @click="cancelarAgendamento(props.row)" />
           </q-td>
@@ -37,40 +41,19 @@
       </template>
     </q-table>
   </div>
-  <q-dialog v-model="mostrarDialogo" persistent>
-    <q-card>
-      <q-card-section>
-        <h2 class="text-h6">Opções de Agendamento</h2>
-        <q-checkbox v-model="opcao1" label="Foi pago" />
-        <div class="q-pa-md" style="max-width: 300px">
-        <q-input
-        v-model="text"
-        filled
-        type="textarea"
-    />
-  </div>
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn label="Cancelar" color="negative" @click="fecharDialogo" />
-        <q-btn label="Enviar" color="green" @click="salvarOpcoes(props.row)" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
 </template>
 
 <script>
 import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import { showLoading, hideLoading } from 'src/composables/UseApi.js'
+import { Notify } from 'quasar'
 
 export default {
   setup () {
     const router = useRouter()
     const isLoading = ref(true)
     const rows = ref([])
-    const mostrarDialogo = ref(false)
-    const opcao1 = ref(false)
-    const text = ref('')
     const linhaSelecionada = ref(null)
 
     const columns = [
@@ -84,20 +67,27 @@ export default {
         format: val => `${val}`,
         sortable: true
       },
-      { name: 'contatos', align: 'center', label: 'Contato', field: 'contatos', sortable: true },
-      { name: 'Data', label: 'Data', field: 'fat', sortable: true },
+      { name: 'phoneNumber', align: 'center', label: 'Contatos', field: 'phoneNumber', sortable: true },
+      { name: 'schedulingDate', label: 'Data', field: 'fat', sortable: true },
       { name: 'Hora', label: 'Hora', field: 'hora', sortable: true },
       { name: 'Serviço', label: 'Serviço', field: 'servico' }
     ]
 
     onMounted(async () => {
       try {
-        const response = await fetch('https://6662e04562966e20ef0a6620.mockapi.io/Nomedoproficional')
-        const data = await response.json()
-        rows.value = data
+        const [naturalpersonResponse, schedulingResponse] = await Promise.all([
+          fetch('http://localhost:5123/NaturalPerson'),
+          fetch('http://localhost:5123/Scheduling')
+        ])
+        const naturalpersonData = await naturalpersonResponse.json()
+        const schedulingData = await schedulingResponse.json()
+
+        rows.value = naturalpersonData.concat(schedulingData)
         isLoading.value = false
       } catch (error) {
+        Notify.create({ type: 'negative', message: 'Erro ao buscar dados da API' })
         console.error('Erro ao buscar dados da API:', error)
+        isLoading.value = false
       }
     })
 
@@ -111,55 +101,26 @@ export default {
     }
     const confirmarAgendamento = (row) => {
       linhaSelecionada.value = row
-      mostrarDialogo.value = true
+      Notify.create({ type: 'positive', message: 'Consulta confirmada com sucesso!' })
     }
-    const salvarOpcoes = async (row) => {
-      try {
-        // Enviar os dados para a API
-        const response = await fetch('https://6662e04562966e20ef0a6620.mockapi.io/produto', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            opcao1: opcao1.value,
-            descricao: text.value // Aqui você pode adicionar qualquer outro dado que deseja enviar
-          })
-        })
-
-        if (response.ok) {
-          mostrarDialogo.value = false
-
-          // Remover o agendamento
-          await cancelarAgendamento(row)
-        } else {
-          console.error('Erro ao enviar dados para a API:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Erro ao enviar dados para a API:', error)
-      }
-    }
-
-    const fecharDialogo = () => {
-      mostrarDialogo.value = false // Fechar o diálogo quando o botão "Cancelar" for clicado
-    }
-
     const cancelarAgendamento = async (row) => {
       try {
-        const response = await fetch(`https://6662e04562966e20ef0a6620.mockapi.io/Nomedoproficional/${row.id}`, {
+        const response = await fetch(`http://localhost:5123/Scheduling${row.id}`, {
           method: 'DELETE'
         })
 
         if (response.ok) {
-          // Remover o item excluído da lista local
           const index = rows.value.indexOf(row)
           if (index !== -1) {
             rows.value.splice(index, 1)
           }
+          Notify.create({ type: 'positive', message: 'Consulta cancelada com sucesso!' })
         } else {
+          Notify.create({ type: 'negative', message: 'Erro ao cancelar consulta' })
           console.error('Erro ao excluir agendamento:', response.statusText)
         }
       } catch (error) {
+        Notify.create({ type: 'negative', message: 'Erro ao cancelar consulta' })
         console.error('Erro ao excluir agendamento:', error)
       }
     }
@@ -172,12 +133,7 @@ export default {
       right: ref(false),
       isLoading,
       showLoading,
-      hideLoading,
-      mostrarDialogo,
-      salvarOpcoes,
-      fecharDialogo,
-      opcao1,
-      text: ref('')
+      hideLoading
 
     }
   }
