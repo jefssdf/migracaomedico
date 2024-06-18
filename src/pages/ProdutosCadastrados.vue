@@ -61,7 +61,7 @@ export default defineComponent({
 
     const carregarProdutos = async () => {
       try {
-        const response = await axios.get('http://localhost:5123/Service')
+        const response = await axios.get('http://localhost:5123/LegalEntityServices/')
         produtos.value = response.data
       } catch (error) {
         notifyError('Erro ao carregar produtos')
@@ -98,7 +98,7 @@ export default defineComponent({
             price: produtoEditado.value.price,
             legalEntityId: produtoEditado.value.legalEntityId
           }
-          await axios.put(`http://localhost:5123/Service/${produto.serviceId}`, produto)
+          await axios.put(`http://localhost:5123/LegalEntityServices${produto.serviceId}`, produto)
           produtos.value[produtoIndexEditado.value] = { ...produto }
           notifySuccess('Produto salvo com sucesso')
         } catch (error) {

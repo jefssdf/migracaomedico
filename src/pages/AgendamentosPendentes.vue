@@ -14,19 +14,19 @@
         flat
         :pagination="pagination"
       >
-        <template v-slot:body-cell-name="props">
+        <template v-slot:body-cell-naturalPersonName="props">
           <q-td :props="props">
-            {{ props.row.name }}
+            {{ props.row.naturalPersonName }}
           </q-td>
         </template>
-        <template v-slot:body-cell-contatos="props">
+        <template v-slot:body-cell-naturalPersonPhone="props">
           <q-td :props="props">
-            {{ props.row.contatos }}
+            {{ props.row.naturalPersonPhone }}
           </q-td>
         </template>
-        <template v-slot:body-cell-data="props">
+        <template v-slot:body-cell-createdAt="props">
           <q-td :props="props">
-            {{ props.row.data }}
+            {{ props.row.createdAt }}
           </q-td>
         </template>
         <template v-slot:body-cell-hora="props">
@@ -34,15 +34,15 @@
             {{ props.row.hora }}
           </q-td>
         </template>
-        <template v-slot:body-cell-serviço="props">
+        <template v-slot:body-cell-serviceName="props">
           <q-td :props="props">
-            {{ props.row.serviço }}
+            {{ props.row.serviceName }}
           </q-td>
         </template>
         <template v-slot:body-cell-actions="props">
           <q-td :props="props" align="right">
-            <q-btn color="green" label="Confirmar" @click="handleButtonClick(props.row)" class="q-mr-xs" />
-            <q-btn  color="negative" label="Cancelar" @click="handleButtonClick(props.row)" />
+            <q-btn color="green" label="Confirmar" @click="confirmAppointment(props.row)" class="q-mr-xs" />
+            <q-btn color="negative" label="Cancelar" @click="cancelAppointment(props.row)" />
           </q-td>
         </template>
       </q-table>
@@ -51,36 +51,60 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data () {
     return {
       columns: [
-        { name: 'name', required: true, label: 'Name', align: 'left', field: row => row.name, format: val => `${val}`, sortable: true },
-        { name: 'contatos', align: 'center', label: 'Contatos', field: 'contatos', sortable: true },
-        { name: 'data', align: 'center', label: 'Data', field: 'data', sortable: true },
+        { name: 'naturalPersonName', required: true, label: 'Nome', align: 'left', field: row => row.naturalPersonName, format: val => `${val}`, sortable: true },
+        { name: 'naturalPersonPhone', align: 'center', label: 'Contatos', field: 'naturalPersonPhone', sortable: true },
+        { name: 'createdAt', align: 'center', label: 'Data', field: 'createdAt', sortable: true },
         { name: 'hora', align: 'center', label: 'Hora', field: 'hora', sortable: true },
-        { name: 'serviço', align: 'center', label: 'Serviço', field: 'serviço', sortable: true },
+        { name: 'serviceName', align: 'center', label: 'Serviço', field: 'serviceName', sortable: true },
         { name: 'actions', align: 'right', label: '', field: 'actions' }
       ],
-      rows: [
-        { id: 1, name: 'Alice', contatos: 99910, data: '21/05/2024', hora: '20:00', serviço: 'Advogado' },
-        { id: 2, name: 'Bob', contatos: 99910, data: '21/05/2024', hora: '20:00', serviço: 'Advogado' },
-        { id: 3, name: 'Charlie', contatos: 99910, data: '21/05/2024', hora: '20:00', serviço: 'Advogado' },
-        { id: 4, name: 'Charlie', contatos: 99910, data: '21/05/2024', hora: '20:00', serviço: 'Advogado' }
-      ],
+      rows: [],
       pagination: {
         page: 1,
         rowsPerPage: 5
       }
     }
   },
+  created () {
+    this.fetchData()
+  },
   methods: {
-    addRow (row) {
-      const newId = this.rows.length + 1
-      this.rows.push({ id: newId, name: `Lucas ${newId}`, contatos: 99999999 + newId, data: `2${newId}/05/2024` + newId, hora: `20:0${newId}`, serviço: 'Advogado' })
+    async fetchData () {
+      try {
+        const response = await axios.get('http://localhost:5123/naturalPerson/')
+        this.rows = response.data.map(item => {
+          const dateTime = new Date(item.createdAt)
+          return {
+            ...item,
+            createdAt: dateTime.toLocaleDateString(), // Format the date
+            hora: dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Format the time
+          }
+        })
+      } catch (error) {
+        console.error('Falha ao buscar dados:', error)
+      }
     },
-    deleteRow (row) {
-      this.rows = this.rows.filter(r => r.id !== row.id)
+    async confirmAppointment (row) {
+      try {
+        await axios.post(`http://localhost:5123/naturalPerson/${row.id}/confirm`)
+        this.rows = this.rows.filter(r => r.id !== row.id)
+      } catch (error) {
+        console.error('Falha ao confirmar agendamento:', error)
+      }
+    },
+    async cancelAppointment (row) {
+      try {
+        await axios.post(`http://localhost:5123/naturalPerson/${row.id}/cancel`)
+        this.rows = this.rows.filter(r => r.id !== row.id)
+      } catch (error) {
+        console.error('Falha ao cancelar agendamento:', error)
+      }
     }
   }
 }
@@ -108,8 +132,8 @@ export default {
 .button-spacing {
   margin-right: 5px;
 }
-.text-h6
-{
-  Color: #26a69a;
+
+.text-h6 {
+  color: #26a69a;
 }
 </style>

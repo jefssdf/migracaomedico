@@ -14,11 +14,11 @@
       >
       <template v-slot:body="props">
         <q-tr :props="props">
-          <q-td key="name" :props="props">
-            {{ props.row.name }}
+          <q-td key="naturalPersonName" :props="props">
+            {{ props.row.naturalPersonName }}
           </q-td>
-          <q-td key="phoneNumber" :props="props">
-            {{ props.row.phoneNumber }}
+          <q-td key="naturalPersonPhone" :props="props">
+            {{ props.row.naturalPersonPhone }}
           </q-td>
           <q-td key="schedulingDate" :props="props">
             {{ props.row.schedulingDate }}
@@ -26,8 +26,8 @@
           <q-td key="Hora" :props="props">
             {{ props.row.hora }}
           </q-td>
-          <q-td key="Serviço" :props="props">
-            {{ props.row.servico }}
+          <q-td key="serviceName" :props="props">
+            {{ props.row.serviceName }}
           </q-td>
           <q-td align="center">
           <input type="checkbox" name="pago" v-model="Pago" value="foipago">
@@ -45,6 +45,7 @@
 
 <script>
 import { useRouter } from 'vue-router'
+// eslint-disable-next-line import/named
 import { ref, onMounted } from 'vue'
 import { showLoading, hideLoading } from 'src/composables/UseApi.js'
 import { Notify } from 'quasar'
@@ -59,30 +60,36 @@ export default {
     const columns = [
 
       {
-        name: 'name',
+        name: 'naturalPersonName',
         required: true,
         label: ' Nome ',
         align: 'left',
-        field: row => row.name,
+        field: row => row.naturalPersonName,
         format: val => `${val}`,
         sortable: true
       },
-      { name: 'phoneNumber', align: 'center', label: 'Contatos', field: 'phoneNumber', sortable: true },
+      { name: 'naturalPersonPhone', align: 'center', label: 'Contatos', field: 'phoneNumber', sortable: true },
       { name: 'schedulingDate', label: 'Data', field: 'fat', sortable: true },
       { name: 'Hora', label: 'Hora', field: 'hora', sortable: true },
-      { name: 'Serviço', label: 'Serviço', field: 'servico' }
+      { name: 'serviceName', label: 'Serviço', field: 'servico' }
     ]
 
     onMounted(async () => {
       try {
-        const [naturalpersonResponse, schedulingResponse] = await Promise.all([
-          fetch('http://localhost:5123/NaturalPerson'),
-          fetch('http://localhost:5123/Scheduling')
+        const [naturalpersonResponse] = await Promise.all([
+          fetch('http://localhost:5123/naturalPerson/')
         ])
         const naturalpersonData = await naturalpersonResponse.json()
-        const schedulingData = await schedulingResponse.json()
 
-        rows.value = naturalpersonData.concat(schedulingData)
+        // Process data to separate date and time
+        rows.value = naturalpersonData.map(item => {
+          const dateTime = new Date(item.schedulingDate)
+          return {
+            ...item,
+            schedulingDate: dateTime.toLocaleDateString(), // Format the date
+            hora: dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Format the time
+          }
+        })
         isLoading.value = false
       } catch (error) {
         Notify.create({ type: 'negative', message: 'Erro ao buscar dados da API' })
@@ -105,7 +112,7 @@ export default {
     }
     const cancelarAgendamento = async (row) => {
       try {
-        const response = await fetch(`http://localhost:5123/Scheduling${row.id}`, {
+        const response = await fetch(`http://localhost:5123/naturalPerson/${row.id}`, {
           method: 'DELETE'
         })
 
