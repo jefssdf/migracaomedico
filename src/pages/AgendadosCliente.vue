@@ -34,7 +34,7 @@
           <span> Foi pago</span>
           </q-td>
           <q-td q-td class="my-custom-padding" align="center"  >
-            <q-btn color="green" label="Confirmar" @click="confirmarAgendamento(props.row)" class="q-mr-xs" />
+            <q-btn color="green" label="Finalizar" @click="confirmarAgendamento(props.row)" class="q-mr-xs" />
             <q-btn  color="negative" label="Cancelar" @click="cancelarAgendamento(props.row)" />
           </q-td>
         </q-tr>
@@ -58,7 +58,6 @@ export default {
     const linhaSelecionada = ref(null)
 
     const columns = [
-
       {
         name: 'naturalPersonName',
         required: true,
@@ -68,22 +67,18 @@ export default {
         format: val => `${val}`,
         sortable: true
       },
-      { name: 'naturalPersonPhone', align: 'center', label: 'Contatos', field: 'phoneNumber', sortable: true },
-      { name: 'schedulingDate', label: 'Data', field: 'fat', sortable: true },
+      { name: 'naturalPersonPhone', align: 'center', label: 'Contatos', field: 'naturalPersonPhone', sortable: true },
+      { name: 'schedulingDate', label: 'Data', field: 'schedulingDate', sortable: true },
       { name: 'Hora', label: 'Hora', field: 'hora', sortable: true },
-      { name: 'serviceName', label: 'Serviço', field: 'servico' }
+      { name: 'serviceName', label: 'Serviço', field: 'serviceName' }
     ]
-
     onMounted(async () => {
       try {
-        const [naturalpersonResponse] = await Promise.all([
-          fetch('http://localhost:5123/naturalPerson/')
-        ])
-        const naturalpersonData = await naturalpersonResponse.json()
-
-        // Process data to separate date and time
-        rows.value = naturalpersonData.map(item => {
-          const dateTime = new Date(item.schedulingDate)
+        const response = await fetch('http://localhost:5123/Scheduling/naturalPerson/b1cb1451-c2ae-441c-ed75-08dc8ca7153b')
+        const data = await response.json()
+        // Process data to format date and time
+        rows.value = data.map(item => {
+          const dateTime = new Date(item.schedulingByIdResponse.schedulingDate)
           return {
             ...item,
             schedulingDate: dateTime.toLocaleDateString(), // Format the date
@@ -97,7 +92,6 @@ export default {
         isLoading.value = false
       }
     })
-
     setTimeout(() => {
       isLoading.value = false
     }, 2000)

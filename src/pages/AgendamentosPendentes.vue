@@ -24,9 +24,9 @@
             {{ props.row.naturalPersonPhone }}
           </q-td>
         </template>
-        <template v-slot:body-cell-createdAt="props">
+        <template v-slot:body-cell-schedulingDate="props">
           <q-td :props="props">
-            {{ props.row.createdAt }}
+            {{ props.row.schedulingDate }}
           </q-td>
         </template>
         <template v-slot:body-cell-hora="props">
@@ -59,7 +59,7 @@ export default {
       columns: [
         { name: 'naturalPersonName', required: true, label: 'Nome', align: 'left', field: row => row.naturalPersonName, format: val => `${val}`, sortable: true },
         { name: 'naturalPersonPhone', align: 'center', label: 'Contatos', field: 'naturalPersonPhone', sortable: true },
-        { name: 'createdAt', align: 'center', label: 'Data', field: 'createdAt', sortable: true },
+        { name: 'schedulingDate', align: 'center', label: 'Data', field: 'schedulingDate', sortable: true },
         { name: 'hora', align: 'center', label: 'Hora', field: 'hora', sortable: true },
         { name: 'serviceName', align: 'center', label: 'Serviço', field: 'serviceName', sortable: true },
         { name: 'actions', align: 'right', label: '', field: 'actions' }
@@ -77,13 +77,16 @@ export default {
   methods: {
     async fetchData () {
       try {
-        const response = await axios.get('http://localhost:5123/naturalPerson/')
+        const response = await axios.get('http://localhost:5123/Scheduling/naturalPerson/b1cb1451-c2ae-441c-ed75-08dc8ca7153b')
         this.rows = response.data.map(item => {
-          const dateTime = new Date(item.createdAt)
+          const schedulingDate = new Date(item.schedulingByIdResponse.schedulingDate)
           return {
-            ...item,
-            createdAt: dateTime.toLocaleDateString(), // Format the date
-            hora: dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Format the time
+            id: item.schedulingByIdResponse.schedulingId,
+            naturalPersonName: item.naturalPersonName,
+            naturalPersonPhone: item.naturalPersonPhone,
+            schedulingDate: schedulingDate.toLocaleDateString(), // Format the date
+            hora: schedulingDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), // Format the time
+            serviceName: item.serviceName
           }
         })
       } catch (error) {

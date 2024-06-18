@@ -61,12 +61,26 @@ export default defineComponent({
 
     const carregarProdutos = async () => {
       try {
-        const response = await axios.get('http://localhost:5123/LegalEntityServices/')
-        produtos.value = response.data
+        const response = await axios.get('http://localhost:5123/Service/LegalEntityServices/c22f4f54-ae63-4d46-428b-08dc8ca6d443')
+        produtos.value = response.data.map(produto => ({
+          ...produto,
+          duration: convertToMinutes(produto.duration)
+        }))
       } catch (error) {
         notifyError('Erro ao carregar produtos')
         console.error('Erro ao carregar produtos:', error)
       }
+    }
+
+    const convertToMinutes = (duration) => {
+      const [hours, minutes] = duration.split(':').map(Number)
+      return hours * 60 + minutes
+    }
+
+    const convertToHHMMSS = (minutes) => {
+      const hours = Math.floor(minutes / 60).toString().padStart(2, '0')
+      const mins = (minutes % 60).toString().padStart(2, '0')
+      return `${hours}:${mins}:00`
     }
 
     const editarProduto = (index) => {
@@ -81,12 +95,6 @@ export default defineComponent({
       produtoIndexEditado.value = null
     }
 
-    const formatDuration = (minutes) => {
-      const hours = Math.floor(minutes / 60).toString().padStart(2, '0')
-      const mins = (minutes % 60).toString().padStart(2, '0')
-      return `${hours}:${mins}:00`
-    }
-
     const salvarProduto = async () => {
       if (produtoIndexEditado.value !== null) {
         try {
@@ -94,11 +102,11 @@ export default defineComponent({
             serviceId: produtoEditado.value.serviceId,
             name: produtoEditado.value.name,
             description: produtoEditado.value.description,
-            duration: formatDuration(produtoEditado.value.duration),
+            duration: convertToHHMMSS(produtoEditado.value.duration),
             price: produtoEditado.value.price,
             legalEntityId: produtoEditado.value.legalEntityId
           }
-          await axios.put(`http://localhost:5123/LegalEntityServices${produto.serviceId}`, produto)
+          await axios.put(`http://localhost:5123/LegalEntityServices/${produto.serviceId}`, produto)
           produtos.value[produtoIndexEditado.value] = { ...produto }
           notifySuccess('Produto salvo com sucesso')
         } catch (error) {
