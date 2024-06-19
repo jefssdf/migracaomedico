@@ -61,12 +61,6 @@ const linksList = [
     route: { name: 'ProdutosProcedimentos' }
   },
   {
-    title: 'Agendamentos pendentes',
-    caption: '',
-    icon: 'library_books',
-    route: { name: 'Agendamentos' }
-  },
-  {
     title: 'Agendados',
     caption: '',
     icon: 'library_books',
@@ -77,6 +71,12 @@ const linksList = [
     caption: '',
     icon: 'inventory_2',
     route: { name: 'ProdutosCadastrados' }
+  },
+  {
+    title: 'Bloquear Horário',
+    caption: '',
+    icon: 'schedule',
+    route: { name: 'BloquearHorario' }
   },
   {
     title: 'Horarios',

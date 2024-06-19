@@ -8,9 +8,11 @@
       title="Agendados"
       :rows="rows"
       :columns="columns"
-      :table-colspan="9"
+      :table-colspan="10"
       row-key="index"
       v-if="!isLoading"
+      :rows-per-page-options="[5, 10]"
+      v-model:pagination="pagination"
       >
       <template v-slot:body="props">
         <q-tr :props="props">

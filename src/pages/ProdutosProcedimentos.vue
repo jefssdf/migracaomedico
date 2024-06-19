@@ -1,8 +1,7 @@
-<!-- eslint-disable import/named -->
 <template>
   <div class="primeira">
     <q-page padding>
-      <q-form  @submit.prevent="onSubmit" @reset="onReset" class="q-gutter-md">
+      <q-form ref="form" @submit.prevent="onSubmit" class="q-gutter-md">
         <q-input
           v-model="name"
           label="Nome"
@@ -23,8 +22,7 @@
           type="number"
           prefix="R$"
           :rules="[
-            (val) =>
-              val >= 0 || 'O preço deve ser igual ou superior a zero'
+            (val) => val >= 0 || 'O preço deve ser igual ou superior a zero'
           ]"
         />
         <q-input
@@ -33,18 +31,23 @@
           type="number"
           prefix="Min"
           :rules="[
-            (val) =>
-              val > 0 || 'O tempo deve ser superior a zero'
+            (val) => val > 0 || 'O tempo deve ser superior a zero'
           ]"
         />
-        <q-btn flat color="secondary" type="submit" text-color="white" label="Cadastrar produto" class="custom-button" />
+        <q-btn
+          flat
+          color="secondary"
+          type="submit"
+          text-color="white"
+          label="Cadastrar produto"
+          class="custom-button"
+        />
       </q-form>
     </q-page>
   </div>
 </template>
 
 <script>
-// eslint-disable-next-line import/named
 import { ref } from 'vue'
 import axios from 'axios'
 import { useQuasar } from 'quasar'
@@ -53,6 +56,7 @@ import useNotify from 'src/composables/UserNotify'
 export default {
   setup () {
     const $q = useQuasar()
+    const form = ref(null)
     const description = ref('')
     const price = ref(0)
     const duration = ref(0)
@@ -86,10 +90,8 @@ export default {
           message: 'Cadastro realizado com sucesso!'
         })
         console.log('Procedimento cadastrado com sucesso!', response.data)
-        onReset()
-        setTimeout(() => {
-          window.location.reload()
-        }, 0)
+        form.value.resetValidation()
+        form.value.reset()
       } catch (error) {
         console.error('Erro ao cadastrar procedimento:', error)
         $q.notify({
@@ -99,20 +101,13 @@ export default {
       }
     }
 
-    const onReset = () => {
-      name.value = ''
-      description.value = ''
-      price.value = 0
-      duration.value = 0
-    }
-
     return {
       description,
       price,
       duration,
       name,
       onSubmit,
-      onReset,
+      form,
       notifyError,
       notifySuccess
     }

@@ -4,7 +4,7 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '/ProdutosProcedimentos', name: 'ProdutosProcedimentos', component: () => import('pages/ProdutosProcedimentos.vue') },
-      { path: '/Agendamentos', name: 'Agendamentos', component: () => import('pages/AgendamentosPendentes.vue') },
+      { path: '/BloquearHorario', name: 'BloquearHorario', component: () => import('src/pages/BloquearHorário.vue') },
       { path: '/Agendados', name: 'Agendados', component: () => import('pages/AgendadosCliente.vue') },
       { path: '/ProdutosCadastrados', name: 'ProdutosCadastrados', component: () => import('pages/ProdutosCadastrados.vue') },
       { path: '/Horarios', name: 'Horarios', component: () => import('pages/HorariosDisponiveis.vue') }
