@@ -25,15 +25,11 @@
             (val) => val >= 0 || 'O preço deve ser igual ou superior a zero'
           ]"
         />
-        <q-input
-          v-model.number="duration"
-          label="Tempo de procedimento (minutos)"
-          type="number"
-          prefix="Min"
-          :rules="[
-            (val) => val > 0 || 'O tempo deve ser superior a zero'
-          ]"
-        />
+        <q-input v-model="duration"  label="Tempo de procedimento (minutos)"
+  type="text"  :rules="[
+    (val) => val.length === 8 || 'O formato da duração é HH:MM:SS' // Validation for HH:MM:SS format
+  ]"
+/>
         <q-btn
           flat
           color="secondary"
@@ -59,28 +55,21 @@ export default {
     const form = ref(null)
     const description = ref('')
     const price = ref(0)
-    const duration = ref(0)
+    const duration = ref('00:00:00')
     const name = ref('')
     const legalEntityId = ref('C22F4F54-AE63-4D46-428B-08DC8CA6D443')
     const { notifyError, notifySuccess } = useNotify()
 
-    const formatDuration = (minutes) => {
-      const hours = Math.floor(minutes / 60).toString().padStart(2, '0')
-      const mins = (minutes % 60).toString().padStart(2, '0')
-      return `${hours}:${mins}:00`
-    }
-
     const onSubmit = async () => {
-      if (!name.value || !description.value || price.value === null || duration.value === null || duration.value <= 0) {
+      if (!name.value || !description.value || price.value === null || duration.value === null) {
         console.log('Por favor, preencha todos os campos antes de enviar o formulário')
         return
       }
       try {
-        const formattedDuration = formatDuration(duration.value)
         const response = await axios.post('http://localhost:5123/Service', {
           name: name.value,
           description: description.value,
-          duration: formattedDuration,
+          duration: duration.value,
           price: price.value,
           legalEntityId: legalEntityId.value
         })

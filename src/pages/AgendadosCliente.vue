@@ -2,7 +2,6 @@
   <q-spinner v-if="isLoading" />
   <div class="q-pa-md">
     <q-table
-      style
       flat bordered
       ref="tableRef"
       title="Agendados"
@@ -35,9 +34,9 @@
           <input type="checkbox" name="pago" v-model="Pago" value="foipago">
           <span> Foi pago</span>
           </q-td>
-          <q-td q-td class="my-custom-padding" align="center"  >
+          <q-td class="my-custom-padding" align="center">
             <q-btn color="green" label="Finalizar" @click="confirmarAgendamento(props.row)" class="q-mr-xs" />
-            <q-btn  color="negative" label="Cancelar" @click="cancelarAgendamento(props.row)" />
+            <q-btn color="negative" label="Cancelar" @click="cancelarAgendamento(props.row)" />
           </q-td>
         </q-tr>
       </template>
@@ -46,18 +45,15 @@
 </template>
 
 <script>
-import { useRouter } from 'vue-router'
-// eslint-disable-next-line import/named
 import { ref, onMounted } from 'vue'
 import { showLoading, hideLoading } from 'src/composables/UseApi.js'
 import { Notify } from 'quasar'
 
 export default {
   setup () {
-    const router = useRouter()
     const isLoading = ref(true)
     const rows = ref([])
-    const linhaSelecionada = ref(null)
+    const Pago = ref(false)
 
     const columns = [
       {
@@ -74,9 +70,10 @@ export default {
       { name: 'Hora', label: 'Hora', field: 'hora', sortable: true },
       { name: 'serviceName', label: 'Serviço', field: 'serviceName' }
     ]
+
     onMounted(async () => {
       try {
-        const response = await fetch('http://localhost:5123/Scheduling/naturalPerson/b1cb1451-c2ae-441c-ed75-08dc8ca7153b')
+        const response = await fetch('http://localhost:5123/Scheduling/legalEntity/d783abde-db71-4342-428c-08dc8ca6d443')
         const data = await response.json()
         // Process data to format date and time
         rows.value = data.map(item => {
@@ -94,18 +91,34 @@ export default {
         isLoading.value = false
       }
     })
+
     setTimeout(() => {
       isLoading.value = false
     }, 2000)
 
-    const handleButtonClick = (row) => {
-      row.pago = true
-      router.push({ name: 'AgendarConsultas' })
+    const confirmarAgendamento = async (schedulingId) => {
+      try {
+        const response = await fetch(`http://localhost:5123/Scheduling/ends/${schedulingId.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ schedulingStatusId: 2 })
+        })
+
+        if (response.ok) {
+          schedulingId.schedulingStatusId = 2
+          Notify.create({ type: 'positive', message: 'Consulta confirmada com sucesso!' })
+        } else {
+          Notify.create({ type: 'negative', message: 'Erro ao confirmar consulta' })
+          console.error('Erro ao atualizar agendamento:', response.statusText)
+        }
+      } catch (error) {
+        Notify.create({ type: 'negative', message: 'Erro ao confirmar consulta' })
+        console.error('Erro ao atualizar agendamento:', error)
+      }
     }
-    const confirmarAgendamento = (row) => {
-      linhaSelecionada.value = row
-      Notify.create({ type: 'positive', message: 'Consulta confirmada com sucesso!' })
-    }
+
     const cancelarAgendamento = async (row) => {
       try {
         const response = await fetch(`http://localhost:5123/naturalPerson/${row.id}`, {
@@ -127,17 +140,16 @@ export default {
         console.error('Erro ao excluir agendamento:', error)
       }
     }
+
     return {
       columns,
       rows,
-      handleButtonClick,
       confirmarAgendamento,
       cancelarAgendamento,
-      right: ref(false),
       isLoading,
       showLoading,
-      hideLoading
-
+      hideLoading,
+      Pago
     }
   }
 }
@@ -158,8 +170,9 @@ button {
   font-size: 15px;
   cursor: pointer;
 }
+
 .my-custom-padding {
   padding: 10%;
-  text-align: r
-  }
+  text-align: right;
+}
 </style>

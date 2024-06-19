@@ -31,7 +31,6 @@
     v-model="duration"
     class="full-width larger-input"
     label="Tempo de indisponibilidade (minutos)"
-    prefix="Min"
     >
       <template v-slot:prepend>
         <q-icon name="access_time" class="cursor-pointer">
@@ -58,7 +57,7 @@ export default {
   setup () {
     const dateModel = ref('2019-02-01')
     const timeModel = ref('12:44')
-    const duration = ref(0)
+    const duration = ref('00:00:00')
     const isLoading = ref(false)
 
     const enviarDuracao = () => {
@@ -108,16 +107,15 @@ h6 {
 }
 
 .primeira {
-  display: flex;
-  flex-direction: column;
+  display: block;
+  justify-content: center;
   align-items: center;
   background: #ebebeb;
   border-radius: 25px;
-  width: 38%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  max-height: 500px;
+  margin: 10% auto;
   padding: 20px;
 }
 
