@@ -106,9 +106,10 @@ export default defineComponent({
             price: produtoEditado.value.price,
             legalEntityId: produtoEditado.value.legalEntityId
           }
-          await axios.put(`http://localhost:5123/LegalEntityServices/${produto.serviceId}`, produto)
+          await axios.put(`http://localhost:5123/Service/${produto.serviceId}`, produto)
           produtos.value[produtoIndexEditado.value] = { ...produto }
           notifySuccess('Produto salvo com sucesso')
+          await carregarProdutos() // Recarrega os produtos após salvar
         } catch (error) {
           notifyError('Erro ao salvar produto')
           console.error('Erro ao salvar produto:', error)

@@ -5,31 +5,26 @@
         <q-input
           v-model="name"
           label="Nome"
-          :rules="[
-            (val) => !!val || 'O Nome do produto ou procedimento é obrigatório'
-          ]"
+          :rules="[(val) => !!val || 'O Nome do produto ou procedimento é obrigatório']"
         />
         <q-input
           v-model="description"
           label="Descrição"
-          :rules="[
-            (val) => !!val || 'A descrição é obrigatória'
-          ]"
+          :rules="[(val) => !!val || 'A descrição é obrigatória']"
         />
         <q-input
           v-model.number="price"
           label="Preço"
           type="number"
           prefix="R$"
-          :rules="[
-            (val) => val >= 0 || 'O preço deve ser igual ou superior a zero'
-          ]"
+          :rules="[(val) => val >= 0 || 'O preço deve ser igual ou superior a zero']"
         />
-        <q-input v-model="duration"  label="Tempo de procedimento (minutos)"
-  type="text"  :rules="[
-    (val) => val.length === 8 || 'O formato da duração é HH:MM:SS' // Validation for HH:MM:SS format
-  ]"
-/>
+        <q-input
+          v-model="duration"
+          label="Tempo de procedimento (minutos)"
+          type="text"
+          :rules="[(val) => val.length === 8 || 'O formato da duração é HH:MM:SS']"
+        />
         <q-btn
           flat
           color="secondary"
@@ -37,7 +32,10 @@
           text-color="white"
           label="Cadastrar produto"
           class="custom-button"
-        />
+          :loading="loading"
+        >
+          <q-spinner-hourglass v-if="loading" color="white" />
+        </q-btn>
       </q-form>
     </q-page>
   </div>
@@ -55,16 +53,24 @@ export default {
     const form = ref(null)
     const description = ref('')
     const price = ref(0)
-    const duration = ref('00:00:00')
+    const duration = ref('00:30:00')
     const name = ref('')
     const legalEntityId = ref('C22F4F54-AE63-4D46-428B-08DC8CA6D443')
     const { notifyError, notifySuccess } = useNotify()
+    const loading = ref(false)
+
+    const carregarProdutos = async () => {
+      // Função para carregar produtos aqui
+    }
 
     const onSubmit = async () => {
       if (!name.value || !description.value || price.value === null || duration.value === null) {
         console.log('Por favor, preencha todos os campos antes de enviar o formulário')
         return
       }
+
+      loading.value = true // Ativar o loading
+
       try {
         const response = await axios.post('http://localhost:5123/Service', {
           name: name.value,
@@ -81,12 +87,20 @@ export default {
         console.log('Procedimento cadastrado com sucesso!', response.data)
         form.value.resetValidation()
         form.value.reset()
+        await carregarProdutos() // Recarrega os produtos após cadastrar
+
+        // Aguarda 2000 ms (2 segundos) antes de recarregar a página
+        setTimeout(() => {
+          window.location.reload()
+        }, 1300)
       } catch (error) {
         console.error('Erro ao cadastrar procedimento:', error)
         $q.notify({
           type: 'negative',
           message: 'Ocorreu um erro ao registrar. Tente novamente.'
         })
+      } finally {
+        loading.value = false // Desativar o loading, independentemente do resultado
       }
     }
 
@@ -98,7 +112,8 @@ export default {
       onSubmit,
       form,
       notifyError,
-      notifySuccess
+      notifySuccess,
+      loading
     }
   }
 }
@@ -113,7 +128,7 @@ export default {
   border-radius: 25px;
   width: 90%;
   max-width: 600px;
-  max-height: 500px; /* Aumentado para acomodar novos campos */
+  max-height: 500px;
   margin: 10% auto;
   padding: 20px;
 }

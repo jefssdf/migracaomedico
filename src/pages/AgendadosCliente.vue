@@ -46,7 +46,6 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import { showLoading, hideLoading } from 'src/composables/UseApi.js'
 import { Notify } from 'quasar'
 
 export default {
@@ -73,7 +72,7 @@ export default {
 
     onMounted(async () => {
       try {
-        const response = await fetch('http://localhost:5123/Scheduling/legalEntity/d783abde-db71-4342-428c-08dc8ca6d443')
+        const response = await fetch('http://localhost:5123/Scheduling/legalEntity/c22f4f54-ae63-4d46-428b-08dc8ca6d443')
         const data = await response.json()
         // Process data to format date and time
         rows.value = data.map(item => {
@@ -81,7 +80,8 @@ export default {
           return {
             ...item,
             schedulingDate: dateTime.toLocaleDateString(), // Format the date
-            hora: dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Format the time
+            hora: dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), // Format the time
+            schedulingId: item.schedulingByIdResponse.schedulingId // Add schedulingId
           }
         })
         isLoading.value = false
@@ -96,18 +96,16 @@ export default {
       isLoading.value = false
     }, 2000)
 
-    const confirmarAgendamento = async (schedulingId) => {
+    const confirmarAgendamento = async (row) => {
       try {
-        const response = await fetch(`http://localhost:5123/Scheduling/ends/${schedulingId.id}`, {
+        const response = await fetch(`http://localhost:5123/Scheduling/ends/${row.schedulingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ schedulingStatusId: 2 })
+          }
         })
 
         if (response.ok) {
-          schedulingId.schedulingStatusId = 2
           Notify.create({ type: 'positive', message: 'Consulta confirmada com sucesso!' })
         } else {
           Notify.create({ type: 'negative', message: 'Erro ao confirmar consulta' })
@@ -121,8 +119,11 @@ export default {
 
     const cancelarAgendamento = async (row) => {
       try {
-        const response = await fetch(`http://localhost:5123/naturalPerson/${row.id}`, {
-          method: 'DELETE'
+        const response = await fetch(`http://localhost:5123/Scheduling/cancel/${row.schedulingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
 
         if (response.ok) {
@@ -147,8 +148,6 @@ export default {
       confirmarAgendamento,
       cancelarAgendamento,
       isLoading,
-      showLoading,
-      hideLoading,
       Pago
     }
   }
