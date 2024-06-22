@@ -72,7 +72,7 @@ export default {
 
     onMounted(async () => {
       try {
-        const response = await fetch('http://localhost:5123/Scheduling/legalEntity/c22f4f54-ae63-4d46-428b-08dc8ca6d443')
+        const response = await fetch('http://localhost:5123/Scheduling/legalEntity/5c22573d-b203-4f82-663c-08dc92c54b41')
         const data = await response.json()
         // Process data to format date and time
         rows.value = data.map(item => {
@@ -106,7 +106,7 @@ export default {
         })
 
         if (response.ok) {
-          Notify.create({ type: 'positive', message: 'Consulta confirmada com sucesso!' })
+          Notify.create({ type: 'positive', message: 'Consulta finalizada com sucesso!' })
         } else {
           Notify.create({ type: 'negative', message: 'Erro ao confirmar consulta' })
           console.error('Erro ao atualizar agendamento:', response.statusText)

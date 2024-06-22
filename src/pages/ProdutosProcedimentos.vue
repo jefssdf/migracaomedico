@@ -55,7 +55,7 @@ export default {
     const price = ref(0)
     const duration = ref('00:30:00')
     const name = ref('')
-    const legalEntityId = ref('C22F4F54-AE63-4D46-428B-08DC8CA6D443')
+    const legalEntityId = ref('5c22573d-b203-4f82-663c-08dc92c54b41')
     const { notifyError, notifySuccess } = useNotify()
     const loading = ref(false)
 

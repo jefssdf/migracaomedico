@@ -16,15 +16,7 @@
     </q-input>
     <q-input filled v-model="timeModel" class="full-width larger-input">
       <template v-slot:prepend>
-        <q-icon name="access_time" class="cursor-pointer">
-          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-            <q-time v-model="timeModel" mask="HH:mm" format24h>
-              <div class="row items-center justify-end">
-                <q-btn v-close-popup label="Enviar" color="primary" flat text-color="white" />
-              </div>
-            </q-time>
-          </q-popup-proxy>
-        </q-icon>
+        <q-icon name="access_time" class="cursor-pointer"></q-icon>
       </template>
     </q-input>
     <q-input filled
@@ -33,45 +25,95 @@
     label="Tempo de indisponibilidade (minutos)"
     >
       <template v-slot:prepend>
+        <q-icon name="access_time" class="cursor-pointer"> </q-icon>
+      </template> </q-input>
+
+    <q-btn flat color="secondary" label="Confirmar" type="button" @click="fazerLogin" text-color="white" />
+
+    <q-input filled v-model="dateModel" class="full-width larger-input" disable>
+      <template v-slot:prepend>
+        <q-icon name="event" class="cursor-pointer"> </q-icon>
+      </template>
+    </q-input>
+    <q-input filled v-model="timeModel" class="full-width larger-input" disable>
+      <template v-slot:prepend>
         <q-icon name="access_time" class="cursor-pointer">
-          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-            <div class="q-pa-md">
-              <div class="row items-center justify-end">
-                <q-btn v-close-popup label="Enviar" color="primary" flat text-color="white" @click="enviarDuracao" />
-              </div>
-            </div>
-          </q-popup-proxy>
         </q-icon>
       </template>
     </q-input>
-    <q-btn flat color="secondary" label="Enviar" type="button" @click="fazerLogin" text-color="white" />
+    <q-btn flat color="secondary" label="Bloquear" type="button" @click="Enviardados" text-color="white" />
   </div>
+
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { Notify } from 'quasar'
 
 export default {
   setup () {
-    const dateModel = ref('2019-02-01')
-    const timeModel = ref('12:44')
-    const duration = ref('00:00:00')
+    const dateModel = ref('2024-06-29')
+    const timeModel = ref('13:00')
+    const duration = ref('')
     const isLoading = ref(false)
 
-    const enviarDuracao = () => {
-      // Lógica para manipular a duração, se necessário
+    const fetchData = async () => {
+      isLoading.value = true
+      try {
+        const response = await axios.get('http://localhost:5123/Schedule/blockService')
+        const blockService = response.data.blockService
+        duration.value = blockService.duration
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        Notify.create({
+          type: 'negative',
+          message: 'Erro ao buscar dados'
+        })
+      } finally {
+        isLoading.value = false
+      }
     }
 
     const fazerLogin = async () => {
       isLoading.value = true
       try {
-        await axios.put('http://localhost:5123/api-endpoint', {
-          date: dateModel.value,
-          time: timeModel.value,
-          duration: duration.value
+        const payload = {
+          serviceId: 'c778237a-fb23-4796-cfe1-08dc92c54b83',
+          name: 'Bloqueio',
+          description: 'Serviço criado para ser utilizado como bloqueio de agenda.',
+          duration: duration.value,
+          price: 10,
+          legalEntityId: '5c22573d-b203-4f82-663c-08dc92c54b41'
+        }
+        await axios.put('http://localhost:5123/Service/c778237a-fb23-4796-cfe1-08dc92c54b83', payload)
+        Notify.create({
+          type: 'positive',
+          message: 'Dados enviados com sucesso!'
         })
+      } catch (error) {
+        Notify.create({
+          type: 'negative',
+          message: 'Erro ao enviar dados'
+        })
+      } finally {
+        isLoading.value = false
+      }
+    }
+    const Enviardados = async () => {
+      isLoading.value = true
+      try {
+        const desiredTimeZoneOffset = +3 * 60 * 60 * 1000 // Offset for 3 hours in milliseconds (adjust as needed)
+        const schedulingDate = new Date(`${dateModel.value}T${timeModel.value}`)
+        schedulingDate.setTime(schedulingDate.getTime() - desiredTimeZoneOffset)
+
+        const payload = {
+          schedulingDate,
+          naturalPersonId: '63dcd949-3a93-4a71-7618-08dc92e580e3',
+          legalEntityId: '5c22573d-b203-4f82-663c-08dc92c54b41',
+          serviceId: 'c778237a-fb23-4796-cfe1-08dc92c54b83'
+        }
+        await axios.post('http://localhost:5123/Scheduling', payload)
         Notify.create({
           type: 'positive',
           message: 'Dados enviados com sucesso!'
@@ -86,13 +128,17 @@ export default {
       }
     }
 
+    onMounted(() => {
+      fetchData()
+    })
+
     return {
       dateModel,
       timeModel,
       duration,
-      enviarDuracao,
       fazerLogin,
-      isLoading
+      isLoading,
+      Enviardados
     }
   }
 }
@@ -101,9 +147,10 @@ export default {
 <style scoped>
 h6 {
   color: #17a2b8;
-  padding-top: 10px;
-  font-size: 20px;
+  font-size: 25px;
   text-align: center;
+  margin-bottom: 30px;
+  margin-top: 30px ;
 }
 
 .primeira {
@@ -112,13 +159,16 @@ h6 {
   align-items: center;
   background: #ebebeb;
   border-radius: 25px;
-  width: 90%;
+  width: 80%;
   max-width: 600px;
-  max-height: 500px;
-  margin: 10% auto;
+  max-height: 1%;
+  margin: 5% auto;
   padding: 20px;
-}
 
+}
+.q-btn{
+  margin-bottom: 20px;
+}
 .full-width {
   width: 100%;
   margin-bottom: 10px;

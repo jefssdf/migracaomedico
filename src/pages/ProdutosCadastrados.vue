@@ -61,7 +61,7 @@ export default defineComponent({
 
     const carregarProdutos = async () => {
       try {
-        const response = await axios.get('http://localhost:5123/Service/LegalEntityServices/c22f4f54-ae63-4d46-428b-08dc8ca6d443')
+        const response = await axios.get('http://localhost:5123/Service/LegalEntityId/5c22573d-b203-4f82-663c-08dc92c54b41')
         produtos.value = response.data.map(produto => ({
           ...produto,
           duration: convertToMinutes(produto.duration)
