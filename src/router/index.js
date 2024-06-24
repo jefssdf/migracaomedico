@@ -1,7 +1,8 @@
 import { route } from 'quasar/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-
+import 'devextreme/dist/css/dx.common.css'
+import 'devextreme/dist/css/dx.light.css'
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
