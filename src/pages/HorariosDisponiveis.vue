@@ -5,9 +5,9 @@
     text-expr="title"
     all-day-expr="dayLong"
     recurrence-rule-expr="recurrence"
-    :current-date.sync="currentDate"
+    v-model:current-date="currentDate"
     current-view="week"
-    time-zone="America/Brasil"
+    time-zone="America/Sao_Paulo"
     :adaptivity-enabled="true"
   >
     <DxView
@@ -29,8 +29,8 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { DxScheduler, DxView, DxEditing } from 'devextreme-vue/scheduler';
+import axios from 'axios'
+import { DxScheduler, DxView, DxEditing } from 'devextreme-vue/scheduler'
 
 export default {
   components: {
@@ -38,62 +38,66 @@ export default {
     DxView,
     DxEditing
   },
-  data() {
+  data () {
     return {
       appointments: [],
       currentDate: new Date(),
-      availableTimes: [] // Array para armazenar os availableTimes
-    };
+      availableTimes: []
+    }
   },
-  mounted() {
-    this.fetchData();
+  mounted () {
+    this.fetchData()
   },
   methods: {
-    async fetchData() {
+    async fetchData () {
       try {
-        const response = await axios.get('http://localhost:5123/Schedule/5c22573d-b203-4f82-663c-08dc92c54b41');
-        const schedulings = response.data.schedulings;
-        this.availableTimes = response.data.availableTimes; // Armazenar os availableTimes
+        const response = await axios.get('http://localhost:5123/Schedule/5c22573d-b203-4f82-663c-08dc92c54b41')
+        const schedulings = response.data.schedulings
+        this.availableTimes = response.data.availableTimes
 
         this.appointments = schedulings.map(scheduling => {
-          const schedulingDate = new Date(scheduling.schedulingDate);
-          const weekday = schedulingDate.getDay(); // Obter o dia da semana (0 = Domingo, 1 = Segunda, ..., 6 = Sábado)
+          const schedulingDate = new Date(scheduling.schedulingDate)
+          const weekday = schedulingDate.getDay()
 
-          // Encontrar o availableTime correspondente ao dia da semana
-          const availableTimeOfDay = this.availableTimes.find(time => time.weekDayId === weekday);
+          const availableTimeOfDay = this.availableTimes.find(time => time.weekDayId === weekday)
 
           if (availableTimeOfDay) {
-            const startTimeParts = availableTimeOfDay.startTime.split(':');
-            const endTimeParts = availableTimeOfDay.endTime.split(':');
+            // Buscar informações do serviço correspondente ao scheduling.serviceId
+            const serviceInfo = response.data.info.find(info => info.serviceId === scheduling.serviceId)
 
-            // Definir a hora de início e fim do agendamento
-            const startDate = new Date(schedulingDate);
-            startDate.setHours(parseInt(startTimeParts[0], 10), parseInt(startTimeParts[1], 10), 0);
+            if (serviceInfo && serviceInfo.serviceDuration) {
+              const serviceDurationParts = serviceInfo.serviceDuration.split(':')
+              const serviceDurationHours = parseInt(serviceDurationParts[0], 10)
+              const serviceDurationMinutes = parseInt(serviceDurationParts[1], 10)
 
-            const endDate = new Date(schedulingDate);
-            endDate.setHours(parseInt(endTimeParts[0], 10), parseInt(endTimeParts[1], 10), 0);
+              const startDate = new Date(schedulingDate)
+              const endDate = new Date(schedulingDate)
+              endDate.setHours(startDate.getHours() + serviceDurationHours)
+              endDate.setMinutes(startDate.getMinutes() + serviceDurationMinutes)
 
-            return {
-              title: `Appointment ${scheduling.schedulingId}`,
-              startDate,
-              endDate
-            };
+              return {
+                title: `Appointment ${scheduling.schedulingId}`,
+                startDate,
+                endDate
+              }
+            } else {
+              console.warn(`Service duration not available for schedulingId ${scheduling.schedulingId}. Skipping appointment.`)
+            }
+          } else {
+            console.warn(`Available time not found for weekday ${weekday}. Skipping appointment.`)
           }
 
-          // Caso não haja availableTime para o dia da semana, retornar null ou lidar com isso de outra forma
-          return null;
-        }).filter(appointment => appointment !== null); // Filtrar agendamentos nulos, se houver
-
+          return null
+        }).filter(appointment => appointment !== null)
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data:', error)
       }
     }
   }
 }
 </script>
 
-
-<style>
+<style scoped>
 #scheduler {
   height: 100%;
 }
